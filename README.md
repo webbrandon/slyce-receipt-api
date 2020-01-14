@@ -62,7 +62,6 @@ Response:
 ---
 **GET /receipt/:receiptId**   
 ```
-Content-Type: application/json
 Accept: application/json
 ```
 Response:
@@ -96,7 +95,6 @@ Response:
 ---
 **GET /receipt/claim/:receiptId/:itemId/:userId**   
 ```
-Content-Type: application/json
 Accept: application/json
 ```
 Response:
@@ -125,7 +123,6 @@ Response:
 ---
 **GET /receipt/pay/:receiptId/:userId/:paymentMethod**   
 ```
-Content-Type: application/json
 Accept: application/json
 ```
 Response:
@@ -138,5 +135,37 @@ Response:
             "transactionMethod": "apple"
         }
     }
+}
+```
+
+---
+**GET /history/:userId**   
+```
+Accept: application/json
+```
+Response:
+- Success: ``200``
+```json
+{
+  "data": {
+    "attributes": {
+      "active": [
+        {
+            "receiptImage": "s3://bucket/path/to/image.jpg",
+            "id": 1,
+            "receiptLineItems": [
+                {
+                    "id": "1-1",
+                    "label": "Item Label",
+                    "paid": false,
+                    "price": 21.5,
+                    "additionalCostPercentage": 0
+                }
+            ]
+        }
+      ],
+      "completed": []
+    }
+  }
 }
 ```

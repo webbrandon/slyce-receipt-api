@@ -18,60 +18,18 @@ router.put('/claim/:receiptId/:receiptItem/:userId', [beginRequest, receipt_midd
 
 router.put('/pay/:receiptId/:userId/:paymentMethod', [beginRequest, receipt_middleware.payReceipt])
 
+// fully mocked ;p
 router.get('/history/:userId', function(req, res, next) {
+  let receipts = res.app.get('receipts')
   // looks up user
-  let userRecords = [{
+  let userRecords = {
     "data": {
       "attributes": {
-        "active": [{
-          "id": 00000002,
-          "userId": "brandon_clark",
-          "receiptImage": "s3://pa-share-receipts/users/brandon_clark/6734g.jpg",
-          "receiptLineItems": [
-            {
-              "id": "00000002-0001",
-              "label": "beef bowl",
-              "claim": "brandon_clark",
-              "payed": true,
-              "price": 12.40,
-              "additionalCostPercentage": 0.15
-            },
-            {
-              "id": "00000002-0002",
-              "label": "chicken bowl",
-              "claim": "vigen_amirkhanyan",
-              "payed": false,
-              "price": 14.50,
-              "additionalCostPercentage": 0.15
-            }
-          ]
-        }],
-        "completed": [{
-          "id": 00000001,
-          "userId": "brandon_clark",
-          "receiptImage": "s3://pa-share-receipts/users/brandon_clark/6734g.jpg",
-          "receiptLineItems": [
-            {
-              "id": "00000001-0001",
-              "label": "beef bowl",
-              "claim": "brandon_clark",
-              "payed": true,
-              "price": 12.40,
-              "additionalCostPercentage": 0.15
-            },
-            {
-              "id": "00000001-0002",
-              "label": "chicken bowl",
-              "claim": "vigen_amirkhanyan",
-              "payed": false,
-              "price": 14.50,
-              "additionalCostPercentage": 0.15
-            }
-          ]
-        }]
+        "active": receipts,
+        "completed": []
       }
     }
-  }]
+  }
   res.json(userRecords)
 })
 
