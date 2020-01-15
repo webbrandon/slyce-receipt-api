@@ -11,22 +11,42 @@ module.exports = {
 function createReceipt(req, res, next) {
   console.log("Begin: createReceipt()")
   let slyce = {}
-  let imageSubmition = ocr.submitImage(req.body.data.attributes.receiptImage)
-
-  slyce.receiptImage = req.body.data.attributes.userId
-  slyce.receiptImage = req.body.data.attributes.receiptImage
-  slyce.id = res.app.get('receipts').length + 1
-  slyce.receiptLineItems = _parseOcrResponse(slyce.id, ocr.get(imageSubmition.token))
-  let receipts =  res.app.get('receipts')
-  receipts.push(slyce)
-  console.log(receipts)
-  res.app.set('receipts', receipts)
-  res.json({
-    data: {
-      attributes: slyce
-    }
-  })
-  console.log("Complete: createReceipt()")
+  let imageSubmition =
+  ocr.submitImage(req.body.data.attributes.receiptImage)
+    .then((imageSubmition) => {
+      slyce.receiptImage = req.body.data.attributes.userId
+      slyce.receiptImage = req.body.data.attributes.receiptImage
+      slyce.id = res.app.get('receipts').length + 1
+      ocr.get(imageSubmition.token)
+        .then((reponse) => {
+          slyce.receiptLineItems = _parseOcrResponse(slyce.id, JSON.parse(reponse))
+          let receipts =  res.app.get('receipts')
+          receipts.push(slyce)
+          res.app.set('receipts', receipts)
+          res.json({
+            data: {
+              attributes: slyce
+            }
+          })
+          console.log("Complete: createReceipt()")
+        })
+        .catch((error) => {
+          res.json({
+            data: {
+              attributes: {}
+            },
+            errors: error
+          })
+        })
+    })
+    .catch((error) => {
+      res.json({
+        data: {
+          attributes: {}
+        },
+        errors: error
+      })
+    })
 }
 
 function getReceipt(req, res, next) {
@@ -46,7 +66,6 @@ function claimReceipt(req, res, next) {
   let receipts = res.app.get('receipts')
   let receipt = _readReceipt(receipts, Number(req.params.receiptId))
   receipt.receiptLineItems.forEach((item, pos) => {
-    console.log(item.id, req.params.receiptItem)
     if (item.id == req.params.receiptItem) {
       receipt.receiptLineItems[pos].claim = req.params.userId
     }
@@ -64,7 +83,6 @@ function payReceipt(req, res, next) {
   let totalCharge = 0
   let receipts = res.app.get('receipts')
   let receipt = _readReceipt(receipts, Number(req.params.receiptId))
-  console.log(receipt);
   receipt.receiptLineItems.forEach((item, pos) => {
     if (item.claim == req.params.userId) {
       totalCharge += item.price
@@ -74,7 +92,6 @@ function payReceipt(req, res, next) {
   })
 
   let updatedReceipts = _updateReceipt(receipts, receipt, Number(req.params.receiptId))
-  console.log(updatedReceipts)
   res.app.set('receipts', updatedReceipts)
   res.json({
     data: {
