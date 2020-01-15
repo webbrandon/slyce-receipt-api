@@ -14,6 +14,8 @@ router.get('/:receiptId', [beginRequest, receipt_middleware.getReceipt])
 
 router.delete('/:receiptId', [beginRequest, receipt_middleware.deleteReceipt])
 
+router.post('/storage/:userId/:filename', [beginRequest, receipt_middleware.storageDestination])
+
 router.put('/claim/:receiptId/:receiptItem/:userId', [beginRequest, receipt_middleware.claimReceipt])
 
 router.put('/pay/:receiptId/:userId/:paymentMethod', [beginRequest, receipt_middleware.payReceipt])

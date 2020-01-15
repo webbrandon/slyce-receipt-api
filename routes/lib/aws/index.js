@@ -1,7 +1,8 @@
 const AWS = require("aws-sdk")
 
 module.exports = {
-  getImage: getImage
+  getImage: getImage,
+  getSignedUrl: getSignedUrl
 }
 
 function getImage(s3Location) {
@@ -20,6 +21,20 @@ function getImage(s3Location) {
      }
    })
  })
+}
+
+function getSignedUrl(userId, filename) {
+  // Create S3 service object
+  let s3 = new AWS.S3({apiVersion: '2006-03-01'})
+  const myBucket = 'slyce-receipt-images'
+  const myKey = 'u/' + userId + '/' + filename
+  const signedUrlExpireSeconds = 60 * 5
+
+  return s3.getSignedUrl('getObject', {
+    Bucket: myBucket,
+    Key: myKey,
+    Expires: signedUrlExpireSeconds
+  })
 }
 
 function _config() {

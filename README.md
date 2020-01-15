@@ -121,6 +121,25 @@ Response:
 
 
 ---
+**GET /receipt/storage/:userId/:filename**   
+
+Request
+```
+Accept: application/json
+```
+Response:
+- Success: ``200``
+```json
+{
+    "data": {
+        "attributes": {
+            "destination": "https://bucket.s3.amazonaws.com/path/to/image.jpg?AWSAccessKeyId=<awsaccesskey>&Expires=1579055186&Signature=<awsaccesssignature>",
+            "s3path": "s3://bucket/path/to/image.jpg"
+        }
+    }
+}
+
+---
 **GET /receipt/pay/:receiptId/:userId/:paymentMethod**   
 ```
 Accept: application/json

@@ -1,11 +1,13 @@
 const ocr = require("./../ocr")
+const s3 = require("./../aws")
 
 module.exports = {
   getReceipt: getReceipt,
   createReceipt: createReceipt,
   claimReceipt: claimReceipt,
   payReceipt: payReceipt,
-  deleteReceipt: deleteReceipt
+  deleteReceipt: deleteReceipt,
+  storageDestination: storageDestination
 }
 
 function createReceipt(req, res, next) {
@@ -59,6 +61,20 @@ function getReceipt(req, res, next) {
     }
   })
   console.log("Complete: getReceipt()")
+}
+
+
+function storageDestination(req, res, next) {
+  console.log("Begin: storageDestination()")
+  res.json({
+    data: {
+      attributes: {
+        destination: s3.getSignedUrl(req.params.userId, req.params.filename),
+        s3path: 's3://slyce-receipt-images/' + req.params.userId + '/' + req.params.filename
+      }
+    }
+  })
+  console.log("Complete: storageDestination()")
 }
 
 function claimReceipt(req, res, next) {
