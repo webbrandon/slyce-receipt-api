@@ -10,6 +10,8 @@ function beginRequest(req, res, next) {
 
 router.post('/', [beginRequest, receipt_middleware.createReceipt])
 
+router.get('/', [beginRequest, receipt_middleware.getAllReceipt])
+
 router.get('/:receiptId', [beginRequest, receipt_middleware.getReceipt])
 
 router.delete('/:receiptId', [beginRequest, receipt_middleware.deleteReceipt])

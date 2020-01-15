@@ -1,0 +1,133 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:717456749013:certificate/6b266416-b139-4ac5-b88f-7580a14054e6
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+  name: slyce-receipt-api
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    name: slyce-receipt-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:717456749013:certificate/6b266416-b139-4ac5-b88f-7580a14054e6
+    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: ELBSecurityPolicy-TLS-1-1-2017-01
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+  name: slyce-receipt-api-public
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    name: slyce-receipt-api
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    name: slyce-receipt-api
+  name: slyce-receipt-api
+spec:
+  selector:
+    matchLabels:
+      name: slyce-receipt-api
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: slyce-receipt-api
+    spec:
+      containers:
+      - image: 717456749013.dkr.ecr.us-east-1.amazonaws.com/slyce-receipt-api:staging
+        imagePullPolicy: Always
+        name: webserver
+        ports:
+        - containerPort: 3000
+          name: webserver
+          protocol: TCP
+        resources:
+          limits:
+            memory: 7Gi
+            cpu: 8
+          requests:
+            memory: 3Gi
+            cpu: 4
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      - command:
+        - bash
+        - -c
+        - /run_proxy.sh
+        env:
+        - name: FRONTEND_PORT
+          value: "8080"
+        - name: BACKEND_PORT
+          value: "3000"
+        image: 717456749013.dkr.ecr.us-east-1.amazonaws.com/nginx-frontend:data-cluster-prod
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - bash
+              - -c
+              - touch /terminate; sleep 20
+        name: airflow-nginx
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - bash
+            - -c
+            - '! test -f /terminate'
+          failureThreshold: 1
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: "4"
+            memory: 256Mi
+          requests:
+            cpu: 500m
+            memory: 256Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

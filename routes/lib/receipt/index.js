@@ -3,6 +3,7 @@ const s3 = require("./../aws")
 
 module.exports = {
   getReceipt: getReceipt,
+  getAllReceipt: getAllReceipt,
   createReceipt: createReceipt,
   claimReceipt: claimReceipt,
   payReceipt: payReceipt,
@@ -51,10 +52,20 @@ function createReceipt(req, res, next) {
     })
 }
 
+function getAllReceipt(req, res, next) {
+  console.log("Begin: getAllReceipt()")
+  const receipts = res.app.get('receipts');
+  res.json({
+    data: {
+      attributes: receipts
+    }
+  })
+  console.log("Complete: getAllReceipt()")
+}
+
 function getReceipt(req, res, next) {
   console.log("Begin: getReceipt()")
   const receipt = _readReceipt(res.app.get('receipts'), req.params.receiptId);
-  console.log(receipt)
   res.json({
     data: {
       attributes: receipt
