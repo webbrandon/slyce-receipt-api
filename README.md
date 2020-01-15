@@ -15,6 +15,15 @@ npm install
 ### Serve Content
 
 Currently this version only saves to the current running instance in memory.  If the service exits it will loose any receipt data.
+
+Create a dot `.env` and update with your parameters:
+```bash
+cp sample.env .env
+nano .env
+```
+
+
+Start:  
 ```bash
 npm start
 ```
