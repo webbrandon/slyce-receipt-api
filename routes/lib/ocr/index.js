@@ -12,7 +12,8 @@ function submitImage(imageLocation) {
   return new Promise((resolve, reject) => {
     s3.getImage(imageLocation)
       .then((s3Object) => {
-        _submitToOcr(s3Object.Body)
+        let filename = imageLocation.split('/')[imageLocation.split('/').length - 1] + '.jpg'
+        _submitToOcr(s3Object.Body, filename)
           .then((resp) => {
             resolve(JSON.parse(resp))
             console.log("Complete: submitImage()")
@@ -33,7 +34,7 @@ function getResponse(token) {
   return _getOcrResponse(token)
 }
 
-function _submitToOcr(file) {
+function _submitToOcr(file, filename) {
   let formData = {
     file: []
   }
@@ -41,7 +42,7 @@ function _submitToOcr(file) {
   formData.file.push({
     value: file,
     options: {
-      filename: 'IMG_20200113_130450.jpg',
+      filename: filename,
       contentType: 'image/jpg'
     }
   })
