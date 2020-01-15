@@ -23,7 +23,7 @@ function createReceipt(req, res, next) {
           let receipts =  res.app.get('receipts')
           receipts.push(slyce)
           res.app.set('receipts', receipts)
-          res.json({
+          res.status(201).json({
             data: {
               attributes: slyce
             }
@@ -31,7 +31,7 @@ function createReceipt(req, res, next) {
           console.log("Complete: createReceipt()")
         })
         .catch((error) => {
-          res.json({
+          res.status(304).json({
             data: {
               attributes: {}
             },
@@ -40,7 +40,7 @@ function createReceipt(req, res, next) {
         })
     })
     .catch((error) => {
-      res.json({
+      res.status(304).json({
         data: {
           attributes: {}
         },
@@ -74,7 +74,7 @@ function claimReceipt(req, res, next) {
   let updatedReceipts = _updateReceipt(receipts, receipt, Number(req.params.receiptId))
   console.log(updatedReceipts)
   res.app.set('receipts', updatedReceipts)
-  res.sendStatus(201)
+  res.sendStatus(202)
   console.log("Complete: claimReceipt()")
 }
 
@@ -93,7 +93,7 @@ function payReceipt(req, res, next) {
 
   let updatedReceipts = _updateReceipt(receipts, receipt, Number(req.params.receiptId))
   res.app.set('receipts', updatedReceipts)
-  res.json({
+  res.status(202).json({
     data: {
       attributes: {
         "totalCharge": totalCharge,
@@ -111,7 +111,7 @@ function deleteReceipt(req, res, next) {
   receipts = _deleteReceipt(receipts, Number(req.params.receiptId))
   res.app.set('receipts', receipts)
   if (before > receipts.length) {
-    res.sendStatus(201)
+    res.sendStatus(202)
   } else {
     res.sendStatus(304)
   }

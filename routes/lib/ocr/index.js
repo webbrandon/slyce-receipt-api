@@ -29,7 +29,7 @@ function submitImage(imageLocation) {
 }
 
 function getResponse(token) {
-  sleep(6)
+  sleep(10)
   return _getOcrResponse(token)
 }
 
@@ -77,6 +77,7 @@ function _getOcrResponse(token) {
 function msleep(n) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, n);
 }
+
 function sleep(n) {
   msleep(n*1000);
 }
