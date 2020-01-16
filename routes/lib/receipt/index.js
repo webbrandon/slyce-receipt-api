@@ -17,7 +17,8 @@ function createReceipt(req, res, next) {
   let imageSubmition =
   ocr.submitImage(req.body.data.attributes.receiptImage)
     .then((imageSubmition) => {
-      slyce.receiptImage = req.body.data.attributes.userId
+      slyce.creator = req.body.data.attributes.creator
+      slyce.created = Date.now()
       slyce.receiptImage = req.body.data.attributes.receiptImage
       slyce.id = res.app.get('receipts').length + 1
       ocr.get(imageSubmition.token)

@@ -38,3 +38,8 @@ push-composite:
 deploy:
 	kubectl config use-context data-cluster
 	kubectl -n slyce apply -f kube/deploy.yaml
+
+roll:
+	kubectl config use-context data-cluster
+	kubectl -n slyce scale deploy slyce-receipt-api --replicas=0
+	kubectl -n slyce scale deploy slyce-receipt-api --replicas=1

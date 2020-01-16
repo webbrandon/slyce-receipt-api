@@ -1,18 +1,17 @@
 require('dotenv').config()
 
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var receiptRouter = require('./routes/receipt');
-
-var app = express();
+let cors = require('cors')
+let createError = require('http-errors');
+let express = require('express');
+let path = require('path');
+let cookieParser = require('cookie-parser');
+let logger = require('morgan');
+let indexRouter = require('./routes/index');
+let receiptRouter = require('./routes/receipt');
+let app = express();
 
 app.set('receipts', []);
-
+app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
