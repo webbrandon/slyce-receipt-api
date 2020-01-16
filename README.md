@@ -2,7 +2,7 @@
 
 **0.0.1-mock**
 
-Create, modify or delete receipt records Slyce transactions.
+Create, modify or delete receipt records Slyce transactions. This is considered a mock subversion because data doesn't persist past a single running instance.
 
 ## Usage
 
