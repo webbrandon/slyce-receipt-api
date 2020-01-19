@@ -20,6 +20,8 @@ router.post('/storage/:userId/:filename', [beginRequest, receipt_middleware.stor
 
 router.put('/claim/:receiptId/:receiptItem/:userId', [beginRequest, receipt_middleware.claimReceipt])
 
+router.get('/pay/:receiptId/:userId', [beginRequest, receipt_middleware.getUserCost])
+
 router.put('/pay/:receiptId/:userId/:paymentMethod', [beginRequest, receipt_middleware.payReceipt])
 
 // fully mocked ;p

@@ -59,7 +59,8 @@ Response:
                     "id": "1-1",
                     "label": "Item Label",
                     "paid": false,
-                    "price": 21.5,
+                    "price": 14.50,
+                    "tax": 1.00,
                     "additionalCostPercentage": 0
                 }
             ]
@@ -86,7 +87,8 @@ Response:
                     "id": "1-1",
                     "label": "Item Label",
                     "paid": false,
-                    "price": 21.5,
+                    "price": 14.50,
+                    "tax": 1.00,
                     "additionalCostPercentage": 0
                 }
             ]
@@ -102,7 +104,7 @@ Response:
 - Failure: ``304``
 
 ---
-**GET /receipt/claim/:receiptId/:itemId/:userId**   
+**PUT /receipt/claim/:receiptId/:itemId/:userId**   
 ```
 Accept: application/json
 ```
@@ -119,7 +121,8 @@ Response:
                     "id": "1-1",
                     "label": "Item Label",
                     "paid": false,
-                    "price": 21.5,
+                    "price": 14.50,
+                    "tax": 1.00,
                     "additionalCostPercentage": 0
                 }
             ]
@@ -149,7 +152,8 @@ Response:
 }
 
 ---
-**GET /receipt/pay/:receiptId/:userId/:paymentMethod**   
+```
+**GET /receipt/pay/:receiptId/:userId**   
 ```
 Accept: application/json
 ```
@@ -159,7 +163,31 @@ Response:
 {
     "data": {
         "attributes": {
-            "totalCharge": 21.50,
+            "cost": {
+              "tax": 1.00,
+              "sub_total": 14.50,
+              "total": 15.50
+            }
+        }
+    }
+}
+```
+---
+**PUT /receipt/pay/:receiptId/:userId/:paymentMethod**   
+```
+Accept: application/json
+```
+Response:
+- Success: ``202``
+```json
+{
+    "data": {
+        "attributes": {
+            "cost": {
+              "tax": 1.00,
+              "sub_total": 14.50,
+              "total": 15.50
+            },
             "transactionMethod": "apple"
         }
     }
@@ -186,7 +214,8 @@ Response:
                     "id": "1-1",
                     "label": "Item Label",
                     "paid": false,
-                    "price": 21.5,
+                    "price": 14.50,
+                    "tax": 1.00,
                     "additionalCostPercentage": 0
                 }
             ]

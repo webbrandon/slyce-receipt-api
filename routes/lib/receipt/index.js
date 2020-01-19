@@ -7,6 +7,7 @@ module.exports = {
   createReceipt: createReceipt,
   claimReceipt: claimReceipt,
   payReceipt: payReceipt,
+  getUserCost: getUserReceiptCost,
   deleteReceipt: deleteReceipt,
   storageDestination: storageDestination
 }
@@ -24,6 +25,7 @@ function createReceipt(req, res, next) {
       ocr.get(imageSubmition.token)
         .then((reponse) => {
           slyce.receiptLineItems = _parseOcrResponse(slyce.id, JSON.parse(reponse))
+          slyce.taxes = _getTaxes(JSON.parse(reponse))
           let receipts =  res.app.get('receipts')
           receipts.push(slyce)
           res.app.set('receipts', receipts)
@@ -95,7 +97,12 @@ function claimReceipt(req, res, next) {
   let receipt = _readReceipt(receipts, Number(req.params.receiptId))
   receipt.receiptLineItems.forEach((item, pos) => {
     if (item.id == req.params.receiptItem) {
-      receipt.receiptLineItems[pos].claim = req.params.userId
+      let claimer = receipt.receiptLineItems[pos].claim;
+      if (claimer != req.params.userId || claimer == undefined) {
+        receipt.receiptLineItems[pos].claim = req.params.userId
+      } else {
+        receipt.receiptLineItems[pos].claim = undefined
+      }
     }
   })
 
@@ -106,14 +113,38 @@ function claimReceipt(req, res, next) {
   console.log("Complete: claimReceipt()")
 }
 
+function getUserReceiptCost(req, res, next) {
+  console.log("Begin: getUserReceiptCost()")
+  let receipts = res.app.get('receipts')
+  let userCost = _userCost(receipts, req.params.receiptId, req.params.userId)
+  let receipt = _readReceipt(receipts, Number(req.params.receiptId))
+  let slyces = []
+
+  console.log(userCost,receipt)
+  receipt.receiptLineItems.forEach((item, pos) => {
+    if (item.claim == req.params.userId) {
+      slyces.push(item)
+    }
+  })
+  console.log(slyces,userCost)
+  res.status(200).json({
+    data: {
+      attributes: {
+        cost: userCost,
+        slyces: slyces
+      }
+    }
+  })
+  console.log("Complete: getUserReceiptCost()")
+}
+
 function payReceipt(req, res, next) {
   console.log("Begin: payReceipt()")
-  let totalCharge = 0
   let receipts = res.app.get('receipts')
+  let userCost = _userCost(receipts, req.params.receiptId, req.params.userId)
   let receipt = _readReceipt(receipts, Number(req.params.receiptId))
   receipt.receiptLineItems.forEach((item, pos) => {
     if (item.claim == req.params.userId) {
-      totalCharge += item.price
       receipt.receiptLineItems[pos].paid = true
       receipt.receiptLineItems[pos].transactionMethod = req.params.paymentMethod
     }
@@ -124,8 +155,8 @@ function payReceipt(req, res, next) {
   res.status(202).json({
     data: {
       attributes: {
-        "totalCharge": totalCharge,
-        "transactionMethod": req.params.paymentMethod
+        cost: userCost,
+        transactionMethod: req.params.paymentMethod
       }
     }
   })
@@ -155,14 +186,16 @@ function _parseOcrResponse(id, res) {
           lineItems.push(_newItem(
             String(id) + "-" + (lineItems.length + 1),
             line.descClean,
-            _addTaxes(res.result.taxes, (Number(line.lineTotal)/line.qty))
+            (Number(line.lineTotal)/line.qty),
+            getTax(res.result.taxes, (Number(line.lineTotal)/line.qty))
           ))
         }
       } else if(Number(line.lineTotal) > 0.00) {
         lineItems.push(_newItem(
           String(id) + "-" + (lineItems.length + 1),
           line.descClean,
-          _addTaxes(res.result.taxes, Number(line.lineTotal))
+          line.lineTotal,
+          getTax(res.result.taxes, Number(line.lineTotal))
         ))
       }
     })
@@ -170,7 +203,33 @@ function _parseOcrResponse(id, res) {
   return lineItems
 }
 
-function _newItem(id, label, price) {
+function _getTaxes(res) {
+  let taxes = 0
+  res.result.taxes.forEach((tax, pos) => {
+    taxes += Number(tax)
+  })
+  return taxes
+}
+
+function _userCost(receipts, receiptId, userId) {
+  let charge = 0
+  let tax = 0
+  let receipt = _readReceipt(receipts, Number(receiptId))
+  receipt.receiptLineItems.forEach((item, pos) => {
+    if (item.claim == userId && item.paid == false) {
+      charge += item.price
+      tax += item.tax
+    }
+  })
+
+  return {
+    tax: tax,
+    sub_total: charge,
+    total: charge + tax
+  }
+}
+
+function _newItem(id, label, price, tax) {
   return {
     "id": id,
     "label": label,
@@ -178,12 +237,14 @@ function _newItem(id, label, price) {
     "paid": false,
     "transactionMethod": undefined,
     "price": price,
-    "additionalCostPercentage": 0
+    "tax": tax,
+    "apply_tax": true,
+    "additionalCharges": 0
   }
 }
 
-function _addTaxes(taxes, price) {
-  let total = price
+function getTax(taxes, price) {
+  let total = 0
   for (tax in taxes) {
     total += price * (tax/100)
   }
