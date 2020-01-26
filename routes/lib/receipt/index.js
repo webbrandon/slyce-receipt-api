@@ -16,15 +16,15 @@ function createReceipt(req, res, next) {
   console.log("Begin: createReceipt()")
   let slyce = {}
   let imageSubmition =
-  ocr.submitImage(req.body.data.attributes.receiptImage)
+  ocr.submitImage(req.body.data.attributes.receipt_image)
     .then((imageSubmition) => {
       slyce.creator = req.body.data.attributes.creator
       slyce.created = Date.now()
-      slyce.receiptImage = req.body.data.attributes.receiptImage
+      slyce.receipt_image = req.body.data.attributes.receipt_image
       slyce.id = res.app.get('receipts').length + 1
       ocr.get(imageSubmition.token)
         .then((reponse) => {
-          slyce.receiptLineItems = _parseOcrResponse(slyce.id, JSON.parse(reponse))
+          slyce.receipt_items = _parseOcrResponse(slyce.id, JSON.parse(reponse))
           slyce.taxes = _getTaxes(JSON.parse(reponse))
           let receipts =  res.app.get('receipts')
           receipts.push(slyce)
@@ -84,7 +84,7 @@ function storageDestination(req, res, next) {
     data: {
       attributes: {
         destination: s3.getSignedUrl(req.params.userId, req.params.filename),
-        s3path: 's3://slyce-receipt-images/' + req.params.userId + '/' + req.params.filename
+        s3path: 's3://slyce-receipt-images/u/' + req.params.userId + '/' + req.params.filename
       }
     }
   })
@@ -95,13 +95,13 @@ function claimReceipt(req, res, next) {
   console.log("Begin: claimReceipt()")
   let receipts = res.app.get('receipts')
   let receipt = _readReceipt(receipts, Number(req.params.receiptId))
-  receipt.receiptLineItems.forEach((item, pos) => {
+  receipt.receipt_items.forEach((item, pos) => {
     if (item.id == req.params.receiptItem) {
-      let claimer = receipt.receiptLineItems[pos].claim;
+      let claimer = receipt.receipt_items[pos].claim;
       if (claimer != req.params.userId || claimer == undefined) {
-        receipt.receiptLineItems[pos].claim = req.params.userId
+        receipt.receipt_items[pos].claim = req.params.userId
       } else {
-        receipt.receiptLineItems[pos].claim = undefined
+        receipt.receipt_items[pos].claim = undefined
       }
     }
   })
@@ -120,13 +120,11 @@ function getUserReceiptCost(req, res, next) {
   let receipt = _readReceipt(receipts, Number(req.params.receiptId))
   let slyces = []
 
-  console.log(userCost,receipt)
-  receipt.receiptLineItems.forEach((item, pos) => {
+  receipt.receipt_items.forEach((item, pos) => {
     if (item.claim == req.params.userId) {
       slyces.push(item)
     }
   })
-  console.log(slyces,userCost)
   res.status(200).json({
     data: {
       attributes: {
@@ -143,10 +141,10 @@ function payReceipt(req, res, next) {
   let receipts = res.app.get('receipts')
   let userCost = _userCost(receipts, req.params.receiptId, req.params.userId)
   let receipt = _readReceipt(receipts, Number(req.params.receiptId))
-  receipt.receiptLineItems.forEach((item, pos) => {
+  receipt.receipt_items.forEach((item, pos) => {
     if (item.claim == req.params.userId) {
-      receipt.receiptLineItems[pos].paid = true
-      receipt.receiptLineItems[pos].transactionMethod = req.params.paymentMethod
+      receipt.receipt_items[pos].paid = true
+      receipt.receipt_items[pos].transaction_method = req.params.paymentMethod
     }
   })
 
@@ -156,7 +154,7 @@ function payReceipt(req, res, next) {
     data: {
       attributes: {
         cost: userCost,
-        transactionMethod: req.params.paymentMethod
+        transaction_method: req.params.paymentMethod
       }
     }
   })
@@ -215,7 +213,7 @@ function _userCost(receipts, receiptId, userId) {
   let charge = 0
   let tax = 0
   let receipt = _readReceipt(receipts, Number(receiptId))
-  receipt.receiptLineItems.forEach((item, pos) => {
+  receipt.receipt_items.forEach((item, pos) => {
     if (item.claim == userId && item.paid == false) {
       charge += item.price
       tax += item.tax
@@ -235,11 +233,11 @@ function _newItem(id, label, price, tax) {
     "label": label,
     "claim": undefined,
     "paid": false,
-    "transactionMethod": undefined,
+    "transaction_method": undefined,
     "price": price,
     "tax": tax,
     "apply_tax": true,
-    "additionalCharges": 0
+    "additional_charges": 0
   }
 }
 

@@ -14,6 +14,7 @@ function getImage(s3Location) {
     let params = _getParams(key)
     s3.getObject(params, (err, data) => {
      if (err) {
+       console.error(err)
        reject(err)
      } else {
        resolve(data)
@@ -30,9 +31,10 @@ function getSignedUrl(userId, filename) {
   const myKey = 'u/' + userId + '/' + filename
   const signedUrlExpireSeconds = 60 * 5
 
-  return s3.getSignedUrl('getObject', {
+  return s3.getSignedUrl('putObject', {
     Bucket: myBucket,
     Key: myKey,
+    ContentType: 'image/jpeg',
     Expires: signedUrlExpireSeconds
   })
 }
